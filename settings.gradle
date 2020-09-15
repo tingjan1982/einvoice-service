@@ -1,0 +1,18 @@
+/**
+ * https://docs.gradle.org/current/userguide/plugins.html
+ */
+pluginManagement {
+    plugins {
+        id 'org.springframework.boot' version '2.3.3.RELEASE'
+        id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    }
+}
+
+rootProject.name = 'einvoice-service'
+
+/**
+ * https://stackoverflow.com/questions/19299316/require-gradle-project-from-another-directory
+ */
+include ':einvoice-common'
+project(':einvoice-common').projectDir = file('../einvoice-common')
+
