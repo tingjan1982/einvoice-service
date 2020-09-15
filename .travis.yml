@@ -10,7 +10,7 @@ script:
   - docker info
   - docker run --rm -v $TRAVIS_BUILD_DIR:/source -v artifact_volume:/artifact_volume -e GPR_USERNAME=$GPR_USERNAME -e GPR_PASSWORD=$GPR_PASSWORD amazoncorretto:11 /bin/sh -c "cd /source ; ./gradlew clean build -PciBuild -x test"
   - ls -l $TRAVIS_BUILD_DIR
-  - sh $TRAVIS_BUILD_DIR/gradlew bootBuildImage
+  - sudo $TRAVIS_BUILD_DIR/gradlew bootBuildImage
 
 after_script:
   - echo $DOCKER_PASSWORD | docker login -u "$DOCKER_USERNAME" --password-stdin
