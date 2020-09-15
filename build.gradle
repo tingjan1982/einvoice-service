@@ -69,3 +69,8 @@ dependencies {
 test {
 	useJUnitPlatform()
 }
+
+bootBuildImage {
+    imageName = "docker.io/joelin/${project.name}:latest"
+    verboseLogging = true
+}
