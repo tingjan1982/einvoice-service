@@ -9,9 +9,9 @@ import java.util.List;
 
 public class DummyObjects {
 
-    public static ElectronicInvoice dummyElectronicInvoice() {
+    public static ElectronicInvoice dummyElectronicInvoice(String invoiceNumber) {
         return new ElectronicInvoice(ObjectId.get().toString(),
-                "AG-12345678",
+                invoiceNumber,
                 new ElectronicInvoice.InvoicePeriod(ZoneId.of("Asia/Taipei")),
                 new BigDecimal("150"),
                 new BigDecimal("7.5"),

@@ -38,14 +38,17 @@ dependencies {
 	}
 
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+	runtimeOnly 'com.google.cloud.sql:postgres-socket-factory:1.1.0'
+	runtimeOnly 'org.hsqldb:hsqldb'
+	runtimeOnly 'org.postgresql:postgresql'
 	implementation 'commons-io:commons-io:2.8.0'
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'org.hsqldb:hsqldb'
 
 	// turnkey library dependencies.
 	// https://stackoverflow.com/questions/33966072/how-to-add-an-external-library-java-spring-mvc-framework-using-gradle-pyramidi

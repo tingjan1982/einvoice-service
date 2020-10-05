@@ -2,6 +2,8 @@ package io.nextpos.einvoice.einvoicemessage.service;
 
 import io.nextpos.einvoice.common.invoice.ElectronicInvoice;
 import io.nextpos.einvoice.common.invoice.ElectronicInvoiceRepository;
+import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueue;
+import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueueService;
 import io.nextpos.einvoice.shared.config.TurnkeyConfigProperties;
 import org.apache.commons.io.FileUtils;
 import org.bson.types.ObjectId;
@@ -27,33 +29,68 @@ class EInvoiceMessageServiceImplTest {
 
     private final EInvoiceMessageService eInvoiceMessageService;
 
+    private final PendingEInvoiceQueueService pendingEInvoiceQueueService;
+
     private final ElectronicInvoiceRepository electronicInvoiceRepository;
 
     private final TurnkeyConfigProperties turnkeyConfigProperties;
 
     @Autowired
-    EInvoiceMessageServiceImplTest(EInvoiceMessageService eInvoiceMessageService, ElectronicInvoiceRepository electronicInvoiceRepository, TurnkeyConfigProperties turnkeyConfigProperties) {
+    EInvoiceMessageServiceImplTest(EInvoiceMessageService eInvoiceMessageService, PendingEInvoiceQueueService pendingEInvoiceQueueService, ElectronicInvoiceRepository electronicInvoiceRepository, TurnkeyConfigProperties turnkeyConfigProperties) {
         this.eInvoiceMessageService = eInvoiceMessageService;
+        this.pendingEInvoiceQueueService = pendingEInvoiceQueueService;
         this.electronicInvoiceRepository = electronicInvoiceRepository;
         this.turnkeyConfigProperties = turnkeyConfigProperties;
     }
 
     @BeforeEach
     void prepare() {
-        final File file = new File(turnkeyConfigProperties.getB2c().getCreateInvoiceDir());
+        final File createInvoiceDir = new File(turnkeyConfigProperties.getB2c().getCreateInvoiceDir());
 
-        if (!file.exists()) {
-            file.mkdirs();
+        if (!createInvoiceDir.exists()) {
+            createInvoiceDir.mkdirs();
+        }
+
+        final File voidInvoiceDir = new File(turnkeyConfigProperties.getB2c().getVoidInvoiceDir());
+
+        if (!voidInvoiceDir.exists()) {
+            voidInvoiceDir.mkdirs();
         }
     }
 
     @AfterEach
     void teardown() throws Exception {
         FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2c().getCreateInvoiceDir()));
+        FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2c().getVoidInvoiceDir()));
     }
 
     @Test
     void createEInvoice() {
+
+        final ElectronicInvoice electronicInvoice = createMockElectronicInvoice();
+
+        final PendingEInvoiceQueue pendingEInvoiceQueue = pendingEInvoiceQueueService.createPendingEInvoiceQueue(electronicInvoice, PendingEInvoiceQueue.PendingEInvoiceType.CREATE);
+
+        final ElectronicInvoice updatedEInvoice = eInvoiceMessageService.createElectronicInvoiceMIG(pendingEInvoiceQueue);
+
+        assertThat(updatedEInvoice.getInvoiceStatus()).isEqualByComparingTo(ElectronicInvoice.InvoiceStatus.MIG_CREATED);
+        assertThat(new File(turnkeyConfigProperties.getB2c().getCreateInvoiceDir()).listFiles()).isNotEmpty();
+    }
+
+    @Test
+    void voidEInvoice() {
+
+        final ElectronicInvoice electronicInvoice = createMockElectronicInvoice();
+
+        final PendingEInvoiceQueue pendingEInvoiceQueue = pendingEInvoiceQueueService.createPendingEInvoiceQueue(electronicInvoice, PendingEInvoiceQueue.PendingEInvoiceType.VOID);
+
+        final ElectronicInvoice updatedEInvoice = eInvoiceMessageService.createElectronicInvoiceMIG(pendingEInvoiceQueue);
+
+        assertThat(updatedEInvoice.getInvoiceStatus()).isEqualByComparingTo(ElectronicInvoice.InvoiceStatus.MIG_CREATED);
+        assertThat(new File(turnkeyConfigProperties.getB2c().getVoidInvoiceDir()).listFiles()).isNotEmpty();
+    }
+
+    private ElectronicInvoice createMockElectronicInvoice() {
 
         final ElectronicInvoice electronicInvoice = new ElectronicInvoice(ObjectId.get().toString(),
                 "AG-12345678",
@@ -63,10 +100,7 @@ class EInvoiceMessageServiceImplTest {
                 "83515813",
                 "Rain App",
                 List.of(new ElectronicInvoice.InvoiceItem("coffee", 1, new BigDecimal("150"), new BigDecimal("150"))));
-        electronicInvoiceRepository.save(electronicInvoice);
 
-        final ElectronicInvoice updatedEInvoice = eInvoiceMessageService.createEInvoice(electronicInvoice.getId());
-
-        assertThat(updatedEInvoice.getInvoiceStatus()).isEqualByComparingTo(ElectronicInvoice.InvoiceStatus.MIG_CREATED);
+        return electronicInvoiceRepository.save(electronicInvoice);
     }
 }

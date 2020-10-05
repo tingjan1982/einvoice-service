@@ -17,5 +17,7 @@ public class TurnkeyConfigProperties {
     public static class B2C {
 
         private String createInvoiceDir;
+
+        private String voidInvoiceDir;
     }
 }

@@ -34,3 +34,4 @@ out/
 .vscode/
 /gradle.properties
 /application.properties
+/application-prod.properties
