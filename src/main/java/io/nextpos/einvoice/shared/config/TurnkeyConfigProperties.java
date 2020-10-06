@@ -13,11 +13,19 @@ public class TurnkeyConfigProperties {
 
     private B2C b2c;
 
+    private B2P b2p;
+
     @Data
     public static class B2C {
 
         private String createInvoiceDir;
 
         private String voidInvoiceDir;
+    }
+
+    @Data
+    public static class B2P {
+
+        private String unusedInvoiceNumberDir;
     }
 }

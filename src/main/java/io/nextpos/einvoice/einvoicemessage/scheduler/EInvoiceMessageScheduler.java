@@ -41,15 +41,34 @@ public class EInvoiceMessageScheduler {
     }
 
     @Scheduled(fixedRateString = "#{schedulerConfigProperties.processMessageInterval.toMillis()}")
-    public void createEInvoiceMessages() {
+    public void processEInvoiceMessages() {
         eInvoiceMessageProcessor.processEInvoiceMessages();
     }
 
     @Scheduled(initialDelay = 20000, fixedRateString = "#{schedulerConfigProperties.updateInvoiceStatusInterval.toMillis()}")
     public void updateEInvoiceStatus() {
-        eInvoiceMessageProcessor.updateEInvoiceStatus();
+        eInvoiceMessageProcessor.updateEInvoicesStatus();
     }
 
+    /**
+     * Runs on the 3rd of every month
+     */
+    @Scheduled(cron = "0 0 0 3 * ?")
+    public void processUnusedInvoiceNumber() {
+        eInvoiceMessageProcessor.processUnusedInvoiceNumbers();
+    }
+
+    /**
+     * Runs hourly from 3rd to 10th of every month
+     */
+    @Scheduled(cron = "0 0 * 3,4,5,6,7,8,9,10 * ?")
+    public void updateInvoiceNumbersStatus() {
+        eInvoiceMessageProcessor.updateInvoiceNumbersStatus();
+    }
+
+    /**
+     * Runs at 5am everyday.
+     */
     @Scheduled(cron = "0 0 5 ? * *")
     public void deleteProcessedQueues() {
         eInvoiceMessageProcessor.deleteProcessedQueues();

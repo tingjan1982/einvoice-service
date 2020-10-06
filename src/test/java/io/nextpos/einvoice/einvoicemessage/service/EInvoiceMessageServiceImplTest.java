@@ -4,6 +4,8 @@ import io.nextpos.einvoice.common.invoice.ElectronicInvoice;
 import io.nextpos.einvoice.common.invoice.ElectronicInvoiceRepository;
 import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueue;
 import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueueService;
+import io.nextpos.einvoice.common.invoicenumber.InvoiceNumberRange;
+import io.nextpos.einvoice.common.invoicenumber.InvoiceNumberRangeService;
 import io.nextpos.einvoice.shared.config.TurnkeyConfigProperties;
 import org.apache.commons.io.FileUtils;
 import org.bson.types.ObjectId;
@@ -33,28 +35,31 @@ class EInvoiceMessageServiceImplTest {
 
     private final ElectronicInvoiceRepository electronicInvoiceRepository;
 
+    private final InvoiceNumberRangeService invoiceNumberRangeService;
+
     private final TurnkeyConfigProperties turnkeyConfigProperties;
 
     @Autowired
-    EInvoiceMessageServiceImplTest(EInvoiceMessageService eInvoiceMessageService, PendingEInvoiceQueueService pendingEInvoiceQueueService, ElectronicInvoiceRepository electronicInvoiceRepository, TurnkeyConfigProperties turnkeyConfigProperties) {
+    EInvoiceMessageServiceImplTest(EInvoiceMessageService eInvoiceMessageService, PendingEInvoiceQueueService pendingEInvoiceQueueService, ElectronicInvoiceRepository electronicInvoiceRepository, InvoiceNumberRangeService invoiceNumberRangeService, TurnkeyConfigProperties turnkeyConfigProperties) {
         this.eInvoiceMessageService = eInvoiceMessageService;
         this.pendingEInvoiceQueueService = pendingEInvoiceQueueService;
         this.electronicInvoiceRepository = electronicInvoiceRepository;
+        this.invoiceNumberRangeService = invoiceNumberRangeService;
         this.turnkeyConfigProperties = turnkeyConfigProperties;
     }
 
     @BeforeEach
     void prepare() {
-        final File createInvoiceDir = new File(turnkeyConfigProperties.getB2c().getCreateInvoiceDir());
+        createDirectory(turnkeyConfigProperties.getB2c().getCreateInvoiceDir());
+        createDirectory(turnkeyConfigProperties.getB2c().getVoidInvoiceDir());
+        createDirectory(turnkeyConfigProperties.getB2p().getUnusedInvoiceNumberDir());
+    }
 
-        if (!createInvoiceDir.exists()) {
-            createInvoiceDir.mkdirs();
-        }
+    private void createDirectory(String directoryPath) {
+        final File file = new File(directoryPath);
 
-        final File voidInvoiceDir = new File(turnkeyConfigProperties.getB2c().getVoidInvoiceDir());
-
-        if (!voidInvoiceDir.exists()) {
-            voidInvoiceDir.mkdirs();
+        if (!file.exists()) {
+            file.mkdirs();
         }
     }
 
@@ -62,6 +67,7 @@ class EInvoiceMessageServiceImplTest {
     void teardown() throws Exception {
         FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2c().getCreateInvoiceDir()));
         FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2c().getVoidInvoiceDir()));
+        FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2p().getUnusedInvoiceNumberDir()));
     }
 
     @Test
@@ -102,5 +108,17 @@ class EInvoiceMessageServiceImplTest {
                 List.of(new ElectronicInvoice.InvoiceItem("coffee", 1, new BigDecimal("150"), new BigDecimal("150"))));
 
         return electronicInvoiceRepository.save(electronicInvoice);
+    }
+
+    @Test
+    void createUnusedInvoiceNumber() {
+
+        final String currentRangeIdentifier = invoiceNumberRangeService.getCurrentRangeIdentifier();
+        InvoiceNumberRange invoiceNumberRange = new InvoiceNumberRange("83515813", currentRangeIdentifier, "AA", "10001001", "10001999");
+
+        eInvoiceMessageService.createUnusedInvoiceNumberMIG(invoiceNumberRange);
+
+        assertThat(invoiceNumberRange.getInvoiceIdentifier()).isNotNull();
+        assertThat(new File(turnkeyConfigProperties.getB2p().getUnusedInvoiceNumberDir()).listFiles()).isNotEmpty();
     }
 }

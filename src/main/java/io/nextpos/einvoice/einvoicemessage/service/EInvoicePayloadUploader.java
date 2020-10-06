@@ -1,16 +1,11 @@
 package io.nextpos.einvoice.einvoicemessage.service;
 
-import com.tradevan.gateway.client.einv.parse.ParserHelper;
 import com.tradevan.gateway.einv.msg.EINVPayload;
 import io.nextpos.einvoice.common.invoice.ElectronicInvoice;
 import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueue;
 import io.nextpos.einvoice.shared.config.TurnkeyConfigProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.FileCopyUtils;
-
-import java.io.File;
-import java.io.FileWriter;
 
 abstract class EInvoicePayloadUploader {
 
@@ -35,35 +30,17 @@ abstract class EInvoicePayloadUploader {
         }
     }
 
-    public EINVPayload buildAndUpload(ElectronicInvoice electronicInvoice, PendingEInvoiceQueue pendingEInvoiceQueue) {
+    public final EINVPayload buildAndUpload(ElectronicInvoice electronicInvoice, PendingEInvoiceQueue pendingEInvoiceQueue) {
+
+        LOGGER.info("Building e-invoice payload {}", electronicInvoice.getInvoiceNumber());
 
         final EINVPayload einvPayload = this.constructEInvoicePayload(electronicInvoice, pendingEInvoiceQueue);
-        this.sendPayloadToPath(electronicInvoice, einvPayload);
+        EINVPayloadCopier.copyPayload(uploadDirectory, einvPayload);
+
+        LOGGER.info("Building e-invoice payload {} done", electronicInvoice.getInvoiceNumber());
 
         return einvPayload;
     }
 
     protected abstract EINVPayload constructEInvoicePayload(ElectronicInvoice electronicInvoice, PendingEInvoiceQueue pendingEInvoiceQueue);
-
-    private void sendPayloadToPath(ElectronicInvoice electronicInvoice, EINVPayload payload) {
-
-        try {
-            File migFile = new File(uploadDirectory, payload.getInvoiceIdentifier() + ".xml");
-
-            LOGGER.info("Copying invoice {} to path {}", electronicInvoice.getInvoiceNumber(), migFile.getAbsolutePath());
-
-            final ParserHelper parserHelper = new ParserHelper();
-            final String einvoiceXML = parserHelper.marshalToXML(payload);
-            LOGGER.debug("Invoice XML: {}", einvoiceXML);
-            FileCopyUtils.copy(einvoiceXML, new FileWriter(migFile));
-
-            LOGGER.info("Copying invoice {} done", electronicInvoice.getInvoiceNumber());
-
-        } catch (Exception e) {
-            LOGGER.error("Sending invoice {} error", electronicInvoice.getInvoiceNumber(), e);
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
-
-
 }

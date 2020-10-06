@@ -1,6 +1,8 @@
 package io.nextpos.einvoice.einvoicemessage.service;
 
 import io.nextpos.einvoice.common.invoice.*;
+import io.nextpos.einvoice.common.invoicenumber.InvoiceNumberRange;
+import io.nextpos.einvoice.common.invoicenumber.InvoiceNumberRangeService;
 import io.nextpos.einvoice.shared.config.TurnkeyConfigProperties;
 import io.nextpos.einvoice.util.DummyObjects;
 import org.apache.commons.io.FileUtils;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 import java.io.File;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,17 +38,20 @@ class EInvoiceMessageProcessorImplTest {
 
     private final PendingEInvoiceQueueRepository pendingEInvoiceQueueRepository;
 
+    private final InvoiceNumberRangeService invoiceNumberRangeService;
+
     private final TurnkeyConfigProperties turnkeyConfigProperties;
 
     private final JdbcTemplate jdbcTemplate;
 
 
     @Autowired
-    EInvoiceMessageProcessorImplTest(EInvoiceMessageProcessor eInvoiceMessageProcessor, PendingEInvoiceQueueService pendingEInvoiceQueueService, ElectronicInvoiceRepository electronicInvoiceRepository, PendingEInvoiceQueueRepository pendingEInvoiceQueueRepository, TurnkeyConfigProperties turnkeyConfigProperties, DataSource dataSource) {
+    EInvoiceMessageProcessorImplTest(EInvoiceMessageProcessor eInvoiceMessageProcessor, PendingEInvoiceQueueService pendingEInvoiceQueueService, ElectronicInvoiceRepository electronicInvoiceRepository, PendingEInvoiceQueueRepository pendingEInvoiceQueueRepository, InvoiceNumberRangeService invoiceNumberRangeService, TurnkeyConfigProperties turnkeyConfigProperties, DataSource dataSource) {
         this.eInvoiceMessageProcessor = eInvoiceMessageProcessor;
         this.pendingEInvoiceQueueService = pendingEInvoiceQueueService;
         this.electronicInvoiceRepository = electronicInvoiceRepository;
         this.pendingEInvoiceQueueRepository = pendingEInvoiceQueueRepository;
+        this.invoiceNumberRangeService = invoiceNumberRangeService;
         this.turnkeyConfigProperties = turnkeyConfigProperties;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
@@ -54,6 +60,7 @@ class EInvoiceMessageProcessorImplTest {
     void prepare() {
         createDirectory(turnkeyConfigProperties.getB2c().getCreateInvoiceDir());
         createDirectory(turnkeyConfigProperties.getB2c().getVoidInvoiceDir());
+        createDirectory(turnkeyConfigProperties.getB2p().getUnusedInvoiceNumberDir());
 
         for (int i = 0; i < 5; i++) {
             String invoiceNumber = "AG-1000100" + i;
@@ -65,7 +72,6 @@ class EInvoiceMessageProcessorImplTest {
     }
 
     private void createDirectory(String directoryPath) {
-
         final File file = new File(directoryPath);
 
         if (!file.exists()) {
@@ -76,16 +82,19 @@ class EInvoiceMessageProcessorImplTest {
     @AfterEach
     void teardown() throws Exception {
         FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2c().getCreateInvoiceDir()));
+        FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2c().getVoidInvoiceDir()));
+        FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2p().getUnusedInvoiceNumberDir()));
     }
 
     @Test
-    void manageEInvoiceMessages() {
-        assertThat(pendingEInvoiceQueueService.findPendingEInvoicesByStatus(PendingEInvoiceQueue.PendingEInvoiceStatus.PENDING)).hasSize(10);
+    void processEInvoiceMessages() {
+
+        assertThat(pendingEInvoiceQueueService.findPendingEInvoicesByStatuses(PendingEInvoiceQueue.PendingEInvoiceStatus.PENDING)).hasSize(10);
 
         eInvoiceMessageProcessor.processEInvoiceMessages();
 
-        assertThat(pendingEInvoiceQueueService.findPendingEInvoicesByStatus(PendingEInvoiceQueue.PendingEInvoiceStatus.PENDING)).isEmpty();
-        final List<PendingEInvoiceQueue> processedInvoices = pendingEInvoiceQueueService.findPendingEInvoicesByStatus(PendingEInvoiceQueue.PendingEInvoiceStatus.PROCESSED);
+        assertThat(pendingEInvoiceQueueService.findPendingEInvoicesByStatuses(PendingEInvoiceQueue.PendingEInvoiceStatus.PENDING)).isEmpty();
+        final List<PendingEInvoiceQueue> processedInvoices = pendingEInvoiceQueueService.findPendingEInvoicesByStatuses(PendingEInvoiceQueue.PendingEInvoiceStatus.PROCESSED);
         assertThat(processedInvoices).hasSize(10);
         assertThat(processedInvoices).allSatisfy(inv -> assertThat(inv.getInvoiceIdentifier()).isNotNull());
 
@@ -96,13 +105,40 @@ class EInvoiceMessageProcessorImplTest {
                     id, id, "C", inv.getInvoiceIdentifier());
         });
 
-        eInvoiceMessageProcessor.updateEInvoiceStatus();
+        eInvoiceMessageProcessor.updateEInvoicesStatus();
 
         assertThat(electronicInvoiceRepository.findAll()).allSatisfy(inv -> assertThat(inv.getInvoiceStatus()).isIn(ElectronicInvoice.InvoiceStatus.PROCESSED, ElectronicInvoice.InvoiceStatus.VOID));
 
         eInvoiceMessageProcessor.deleteProcessedQueues();
 
         assertThat(pendingEInvoiceQueueRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void processUnusedInvoiceNumbers() {
+
+        int monthToSubtract = YearMonth.now().getMonthValue() % 2 == 0 ? 2 : 1;
+        String rangeIdentifier = invoiceNumberRangeService.getRangeIdentifier(YearMonth.now().minusMonths(monthToSubtract));
+
+        final InvoiceNumberRange invoiceNumberRange = new InvoiceNumberRange("83515813", rangeIdentifier, "AA", "10001001", "100001999");
+        invoiceNumberRangeService.saveInvoiceNumberRange(invoiceNumberRange);
+
+        eInvoiceMessageProcessor.processUnusedInvoiceNumbers();
+
+        final List<InvoiceNumberRange> invoiceNumberRanges = invoiceNumberRangeService.getInvoiceNumberRangesByLastRangeIdentifier();
+        AtomicInteger seqNo = new AtomicInteger();
+        invoiceNumberRanges.forEach(inv -> {
+            final String id = String.valueOf(seqNo.incrementAndGet());
+            jdbcTemplate.update("insert into turnkey_message_log (seqno, subseqno, status, invoice_identifier) values (?, ?, ?, ?)",
+                    id, id, "C", inv.getInvoiceIdentifier());
+        });
+
+        eInvoiceMessageProcessor.updateInvoiceNumbersStatus();
+
+        assertThat(invoiceNumberRangeService.getInvoiceNumberRange(invoiceNumberRange.getId())).satisfies(range -> {
+            assertThat(range.getInvoiceIdentifier()).isNotNull();
+            assertThat(range.getStatus()).isEqualByComparingTo(InvoiceNumberRange.InvoiceNumberRangeStatus.FINISHED);
+        });
     }
 
     @Test

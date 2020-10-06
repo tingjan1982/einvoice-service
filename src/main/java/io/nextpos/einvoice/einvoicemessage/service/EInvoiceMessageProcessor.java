@@ -11,7 +11,11 @@ public interface EInvoiceMessageProcessor {
 
     void processEInvoiceMessages(Supplier<List<PendingEInvoiceQueue>> pendingEInvoicesProvider);
 
-    void updateEInvoiceStatus();
+    void updateEInvoicesStatus();
+
+    void processUnusedInvoiceNumbers();
+
+    void updateInvoiceNumbersStatus();
 
     void deleteProcessedQueues();
 }
