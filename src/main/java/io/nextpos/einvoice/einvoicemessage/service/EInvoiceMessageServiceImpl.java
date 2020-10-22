@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -73,7 +74,7 @@ public class EInvoiceMessageServiceImpl implements EInvoiceMessageService {
         branchTrackBlankItem.setInvoiceBeginNo(rangeFrom);
         branchTrackBlankItem.setInvoiceEndNo(rangeTo);
 
-        return this.createUnusedInvoiceNumberMIGInternal(invoiceNumberRange, List.of(branchTrackBlankItem));
+        return this.createUnusedInvoiceNumberMIGInternal(invoiceNumberRange, Arrays.asList(branchTrackBlankItem));
     }
 
     private InvoiceNumberRange createUnusedInvoiceNumberMIGInternal(InvoiceNumberRange invoiceNumberRange, List<BranchTrackBlankItem> branchTrackBlankItems) {
