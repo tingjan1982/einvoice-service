@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -74,7 +74,7 @@ public class EInvoiceMessageServiceImpl implements EInvoiceMessageService {
         branchTrackBlankItem.setInvoiceBeginNo(rangeFrom);
         branchTrackBlankItem.setInvoiceEndNo(rangeTo);
 
-        return this.createUnusedInvoiceNumberMIGInternal(invoiceNumberRange, Arrays.asList(branchTrackBlankItem));
+        return this.createUnusedInvoiceNumberMIGInternal(invoiceNumberRange, Collections.singletonList(branchTrackBlankItem));
     }
 
     private InvoiceNumberRange createUnusedInvoiceNumberMIGInternal(InvoiceNumberRange invoiceNumberRange, List<BranchTrackBlankItem> branchTrackBlankItems) {
@@ -89,7 +89,7 @@ public class EInvoiceMessageServiceImpl implements EInvoiceMessageService {
         einvPayload.setMain(main);
 
         DetailsType details = new DetailsType();
-        details.setBranchTrackBlankItemList(branchTrackBlankItems);
+        branchTrackBlankItems.forEach(details::addBranchTrackBlankItem);
         einvPayload.setDetails(details);
 
         EINVPayloadCopier.copyPayload(turnkeyConfigProperties.getB2p().getUnusedInvoiceNumberDir(), einvPayload);
