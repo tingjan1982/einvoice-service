@@ -36,7 +36,7 @@ public class PendingEInvoiceQueueProcessor extends AbstractEInvoiceObjectProcess
     @Override
     protected void processSingleObjectInternal(PendingEInvoiceQueue pendingEInvoice) {
 
-        LOGGER.info("Processing e-invoice id [type={}]: {}", pendingEInvoice.getInvoiceNumber(), pendingEInvoice.getInvoiceType());
+        LOGGER.info("Processing e-invoice id [type={}]: {}", pendingEInvoice.getInvoiceType(), pendingEInvoice.getInvoiceNumber());
 
         eInvoiceMessageService.createElectronicInvoiceMIG(pendingEInvoice);
         pendingEInvoice.markAsProcessed();

@@ -142,6 +142,29 @@ class EInvoiceMessageProcessorImplTest {
     }
 
     @Test
+    void processOneInvoiceNumberRange() {
+
+        String rangeIdentifier = invoiceNumberRangeService.getRangeIdentifier(YearMonth.now());
+        final String rangeFrom = "10001001";
+        final String rangeTo = "100001999";
+        final InvoiceNumberRange invoiceNumberRange = new InvoiceNumberRange("83515813", rangeIdentifier, "AA", rangeFrom, rangeTo);
+        invoiceNumberRangeService.saveInvoiceNumberRange(invoiceNumberRange);
+
+        eInvoiceMessageProcessor.processUnusedInvoiceNumber(invoiceNumberRange, rangeFrom, rangeTo);
+
+        String id = "1";
+        jdbcTemplate.update("insert into turnkey_message_log (seqno, subseqno, status, invoice_identifier) values (?, ?, ?, ?)",
+                id, id, "C", invoiceNumberRange.getInvoiceIdentifier());
+
+        eInvoiceMessageProcessor.updateInvoiceNumbersStatus(() -> List.of(invoiceNumberRange));
+
+        assertThat(invoiceNumberRangeService.getInvoiceNumberRange(invoiceNumberRange.getId())).satisfies(range -> {
+            assertThat(range.getInvoiceIdentifier()).isNotNull();
+            assertThat(range.getStatus()).isEqualByComparingTo(InvoiceNumberRange.InvoiceNumberRangeStatus.FINISHED);
+        });
+    }
+
+    @Test
     void generatePendingEInvoiceStats() {
 
         final PendingEInvoiceQueue pendingEInvoiceQueue = pendingEInvoiceQueueRepository.findAll().get(0);

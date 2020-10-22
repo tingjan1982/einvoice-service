@@ -28,6 +28,16 @@ public class InvoiceNumberRangeProcessor extends AbstractEInvoiceObjectProcessor
         this.invoiceNumberRangeService = invoiceNumberRangeService;
     }
 
+    public void processOneInvoiceNumberRange(InvoiceNumberRange invoiceNumberRange, String rangeFrom, String rangeTo) {
+
+        LOGGER.info("Processing one invoice number range {} {} [{} - {}]", invoiceNumberRange.getUbn(), invoiceNumberRange.getRangeIdentifier(), rangeFrom, rangeTo);
+
+        final InvoiceNumberRange updatedInvoiceNumberRange = eInvoiceMessageService.createUnusedInvoiceNumberMIG(invoiceNumberRange, rangeFrom, rangeTo);
+        invoiceNumberRangeService.saveInvoiceNumberRange(updatedInvoiceNumberRange);
+
+        LOGGER.info("Finished one invoice number range {} {}", updatedInvoiceNumberRange.getUbn(), updatedInvoiceNumberRange.getRangeIdentifier());
+    }
+
     @Override
     protected void processSingleObjectInternal(InvoiceNumberRange invoiceNumberRange) {
 

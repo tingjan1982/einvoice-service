@@ -64,11 +64,21 @@ public class EInvoiceMessageProcessorImpl implements EInvoiceMessageProcessor {
     }
 
     @Override
+    public void processUnusedInvoiceNumber(InvoiceNumberRange invoiceNumberRange, String rangeFrom, String rangeTo) {
+
+        invoiceNumberRangeProcessor.processOneInvoiceNumberRange(invoiceNumberRange, rangeFrom, rangeTo);
+    }
+
+    @Override
     public void updateInvoiceNumbersStatus() {
 
-        final List<InvoiceNumberRange> invoiceNumberRanges = invoiceNumberRangeService.getInvoiceNumberRangesByLastRangeIdentifier();
+        this.updateInvoiceNumbersStatus(invoiceNumberRangeService::getInvoiceNumberRangesByLastRangeIdentifier);
+    }
 
-        invoiceNumberRangeProcessor.updateObjectsStatus(invoiceNumberRanges);
+    @Override
+    public void updateInvoiceNumbersStatus(Supplier<List<InvoiceNumberRange>> invoiceNumberRangeProvider) {
+
+        invoiceNumberRangeProcessor.updateObjectsStatus(invoiceNumberRangeProvider.get());
     }
 
     @Override

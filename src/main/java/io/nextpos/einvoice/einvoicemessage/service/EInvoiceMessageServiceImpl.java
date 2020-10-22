@@ -53,6 +53,31 @@ public class EInvoiceMessageServiceImpl implements EInvoiceMessageService {
     @Override
     public InvoiceNumberRange createUnusedInvoiceNumberMIG(InvoiceNumberRange invoiceNumberRange) {
 
+        final List<BranchTrackBlankItem> blankItems = invoiceNumberRange.getNumberRanges().stream()
+                .filter(r -> !r.isFinished())
+                .map(r -> {
+                    final BranchTrackBlankItem blankItem = new BranchTrackBlankItem();
+                    blankItem.setInvoiceBeginNo(r.getNextIncrement());
+                    blankItem.setInvoiceEndNo(r.getRangeTo());
+
+                    return blankItem;
+                }).collect(Collectors.toList());
+
+        return this.createUnusedInvoiceNumberMIGInternal(invoiceNumberRange, blankItems);
+    }
+
+    @Override
+    public InvoiceNumberRange createUnusedInvoiceNumberMIG(InvoiceNumberRange invoiceNumberRange, String rangeFrom, String rangeTo) {
+
+        final BranchTrackBlankItem branchTrackBlankItem = new BranchTrackBlankItem();
+        branchTrackBlankItem.setInvoiceBeginNo(rangeFrom);
+        branchTrackBlankItem.setInvoiceEndNo(rangeTo);
+
+        return this.createUnusedInvoiceNumberMIGInternal(invoiceNumberRange, List.of(branchTrackBlankItem));
+    }
+
+    private InvoiceNumberRange createUnusedInvoiceNumberMIGInternal(InvoiceNumberRange invoiceNumberRange, List<BranchTrackBlankItem> branchTrackBlankItems) {
+
         final E0402 einvPayload = new E0402();
         MainType main = new MainType();
         main.setHeadBan(invoiceNumberRange.getUbn());
@@ -63,16 +88,7 @@ public class EInvoiceMessageServiceImpl implements EInvoiceMessageService {
         einvPayload.setMain(main);
 
         DetailsType details = new DetailsType();
-        final List<BranchTrackBlankItem> blankItems = invoiceNumberRange.getNumberRanges().stream()
-                .filter(r -> !r.isFinished())
-                .map(r -> {
-                    final BranchTrackBlankItem blankItem = new BranchTrackBlankItem();
-                    blankItem.setInvoiceBeginNo(r.getNextIncrement());
-                    blankItem.setInvoiceEndNo(r.getRangeTo());
-
-                    return blankItem;
-                }).collect(Collectors.toList());
-        details.setBranchTrackBlankItemList(blankItems);
+        details.setBranchTrackBlankItemList(branchTrackBlankItems);
         einvPayload.setDetails(details);
 
         EINVPayloadCopier.copyPayload(turnkeyConfigProperties.getB2p().getUnusedInvoiceNumberDir(), einvPayload);

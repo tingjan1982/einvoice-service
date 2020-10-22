@@ -9,4 +9,6 @@ public interface EInvoiceMessageService {
     ElectronicInvoice createElectronicInvoiceMIG(PendingEInvoiceQueue pendingEInvoiceQueue);
 
     InvoiceNumberRange createUnusedInvoiceNumberMIG(InvoiceNumberRange invoiceNumberRange);
+
+    InvoiceNumberRange createUnusedInvoiceNumberMIG(InvoiceNumberRange invoiceNumberRange, String rangeFrom, String rangeTo);
 }
