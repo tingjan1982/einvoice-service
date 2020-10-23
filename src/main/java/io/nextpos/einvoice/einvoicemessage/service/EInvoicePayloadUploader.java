@@ -23,6 +23,8 @@ abstract class EInvoicePayloadUploader {
         switch (pendingEInvoiceQueue.getInvoiceType()) {
             case CREATE:
                 return new CreateEInvoicePayloadUploader(configProperties.getB2c().getCreateInvoiceDir());
+            case CANCEL:
+                return new CancelEInvoicePayloadUploader(configProperties.getB2c().getCancelInvoiceDir());
             case VOID:
                 return new VoidEInvoicePayloadUploader(configProperties.getB2c().getVoidInvoiceDir());
             default:

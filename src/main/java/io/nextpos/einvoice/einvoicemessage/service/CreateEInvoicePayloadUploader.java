@@ -10,9 +10,9 @@ import com.tradevan.gateway.einv.msg.v32.UtilBody.DonateMarkEnum;
 import com.tradevan.gateway.einv.msg.v32.UtilBody.InvoiceTypeEnum;
 import com.tradevan.gateway.einv.msg.v32.UtilBody.RoleDescriptionType;
 import com.tradevan.gateway.einv.msg.v32.UtilBody.TaxTypeEnum;
-import io.micrometer.core.instrument.util.StringUtils;
 import io.nextpos.einvoice.common.invoice.ElectronicInvoice;
 import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueue;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.format.number.NumberStyleFormatter;
 
 import java.text.NumberFormat;
@@ -39,12 +39,16 @@ class CreateEInvoicePayloadUploader extends EInvoicePayloadUploader {
         // invoice metadata
         mainType.setInvoiceType(InvoiceTypeEnum.SixGeneralTaxType); // 7 or 8
         mainType.setDonateMark(DonateMarkEnum.NotDonated);
-        mainType.setPrintMark("Y");
         mainType.setRandomNumber(electronicInvoice.getRandomNumber());
-        // if carrier is specified
-//        mainType.setCarrierType("");
-//        mainType.setCarrierId1("");
-//        mainType.setCarrierId2("");
+
+        if (StringUtils.isNotBlank(electronicInvoice.getCarrierId())) {
+            mainType.setPrintMark("N");
+            mainType.setCarrierType("3J0002");
+            mainType.setCarrierId1(electronicInvoice.getCarrierId());
+            mainType.setCarrierId2(electronicInvoice.getCarrierId2());
+        } else {
+            mainType.setPrintMark("Y");
+        }
 
         RoleDescriptionType seller = new RoleDescriptionType();
         seller.setIdentifier(electronicInvoice.getSellerUbn());

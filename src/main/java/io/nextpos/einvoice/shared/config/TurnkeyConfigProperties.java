@@ -20,6 +20,8 @@ public class TurnkeyConfigProperties {
 
         private String createInvoiceDir;
 
+        private String cancelInvoiceDir;
+
         private String voidInvoiceDir;
     }
 

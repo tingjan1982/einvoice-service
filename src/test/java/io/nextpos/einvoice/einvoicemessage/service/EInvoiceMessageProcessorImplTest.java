@@ -59,6 +59,7 @@ class EInvoiceMessageProcessorImplTest {
     @BeforeEach
     void prepare() {
         createDirectory(turnkeyConfigProperties.getB2c().getCreateInvoiceDir());
+        createDirectory(turnkeyConfigProperties.getB2c().getCancelInvoiceDir());
         createDirectory(turnkeyConfigProperties.getB2c().getVoidInvoiceDir());
         createDirectory(turnkeyConfigProperties.getB2p().getUnusedInvoiceNumberDir());
 
@@ -67,6 +68,7 @@ class EInvoiceMessageProcessorImplTest {
             final ElectronicInvoice einvoice = DummyObjects.dummyElectronicInvoice(invoiceNumber);
             electronicInvoiceRepository.save(einvoice);
             pendingEInvoiceQueueService.createPendingEInvoiceQueue(einvoice, PendingEInvoiceQueue.PendingEInvoiceType.CREATE);
+            pendingEInvoiceQueueService.createPendingEInvoiceQueue(einvoice, PendingEInvoiceQueue.PendingEInvoiceType.CANCEL);
             pendingEInvoiceQueueService.createPendingEInvoiceQueue(einvoice, PendingEInvoiceQueue.PendingEInvoiceType.VOID);
         }
     }
@@ -82,20 +84,25 @@ class EInvoiceMessageProcessorImplTest {
     @AfterEach
     void teardown() throws Exception {
         FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2c().getCreateInvoiceDir()));
+        FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2c().getCancelInvoiceDir()));
         FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2c().getVoidInvoiceDir()));
         FileUtils.deleteDirectory(new File(turnkeyConfigProperties.getB2p().getUnusedInvoiceNumberDir()));
+
+        // todo: enable mongodb transaction so rollback occurs automatically.
+        electronicInvoiceRepository.deleteAll();
+        pendingEInvoiceQueueRepository.deleteAll();
     }
 
     @Test
     void processEInvoiceMessages() {
 
-        assertThat(pendingEInvoiceQueueService.findPendingEInvoicesByStatuses(PendingEInvoiceQueue.PendingEInvoiceStatus.PENDING)).hasSize(10);
+        assertThat(pendingEInvoiceQueueService.findPendingEInvoicesByStatuses(PendingEInvoiceQueue.PendingEInvoiceStatus.PENDING)).hasSize(15);
 
         eInvoiceMessageProcessor.processEInvoiceMessages();
 
         assertThat(pendingEInvoiceQueueService.findPendingEInvoicesByStatuses(PendingEInvoiceQueue.PendingEInvoiceStatus.PENDING)).isEmpty();
         final List<PendingEInvoiceQueue> processedInvoices = pendingEInvoiceQueueService.findPendingEInvoicesByStatuses(PendingEInvoiceQueue.PendingEInvoiceStatus.PROCESSED);
-        assertThat(processedInvoices).hasSize(10);
+        assertThat(processedInvoices).hasSize(15);
         assertThat(processedInvoices).allSatisfy(inv -> assertThat(inv.getInvoiceIdentifier()).isNotNull());
 
         AtomicInteger seqNo = new AtomicInteger();
@@ -107,7 +114,7 @@ class EInvoiceMessageProcessorImplTest {
 
         eInvoiceMessageProcessor.updateEInvoicesStatus();
 
-        assertThat(electronicInvoiceRepository.findAll()).allSatisfy(inv -> assertThat(inv.getInvoiceStatus()).isIn(ElectronicInvoice.InvoiceStatus.PROCESSED, ElectronicInvoice.InvoiceStatus.VOID));
+        assertThat(electronicInvoiceRepository.findAll()).allSatisfy(inv -> assertThat(inv.getInvoiceStatus()).isIn(ElectronicInvoice.InvoiceStatus.PROCESSED, ElectronicInvoice.InvoiceStatus.CANCELLED, ElectronicInvoice.InvoiceStatus.VOID));
 
         eInvoiceMessageProcessor.deleteProcessedQueues();
 

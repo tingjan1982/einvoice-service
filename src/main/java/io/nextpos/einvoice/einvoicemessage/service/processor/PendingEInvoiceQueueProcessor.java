@@ -89,6 +89,9 @@ public class PendingEInvoiceQueueProcessor extends AbstractEInvoiceObjectProcess
             case CREATE:
                 einvStatus = ElectronicInvoice.InvoiceStatus.PROCESSED;
                 break;
+            case CANCEL:
+                einvStatus = ElectronicInvoice.InvoiceStatus.CANCELLED;
+                break;
             case VOID:
                 einvStatus = ElectronicInvoice.InvoiceStatus.VOID;
                 break;

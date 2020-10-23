@@ -1,28 +1,28 @@
 package io.nextpos.einvoice.einvoicemessage.service;
 
 import com.tradevan.gateway.einv.msg.EINVPayload;
-import com.tradevan.gateway.einv.msg.v32.C0701;
+import com.tradevan.gateway.einv.msg.v32.C0501;
 import io.nextpos.einvoice.common.invoice.ElectronicInvoice;
 import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueue;
 import org.apache.commons.lang.StringUtils;
 
-public class VoidEInvoicePayloadUploader extends EInvoicePayloadUploader {
+class CancelEInvoicePayloadUploader extends EInvoicePayloadUploader {
 
-    public VoidEInvoicePayloadUploader(String voidInvoiceDir) {
-        super(voidInvoiceDir);
+    public CancelEInvoicePayloadUploader(String uploadDirectory) {
+        super(uploadDirectory);
     }
 
     @Override
     protected EINVPayload constructEInvoicePayload(ElectronicInvoice electronicInvoice, PendingEInvoiceQueue pendingEInvoiceQueue) {
 
-        final C0701 message = new C0701();
-        message.setVoidInvoiceNumber(electronicInvoice.getInternalInvoiceNumber());
+        final C0501 message = new C0501();
+        message.setCancelInvoiceNumber(electronicInvoice.getInternalInvoiceNumber());
         message.setInvoiceDate(electronicInvoice.getInvoiceCreatedDate());
         message.setBuyerId(StringUtils.defaultString(electronicInvoice.getBuyerUbn(), "0000000000"));
         message.setSellerId(electronicInvoice.getSellerUbn());
-        message.setVoidDate(pendingEInvoiceQueue.getCreatedDate());
-        message.setVoidTime(pendingEInvoiceQueue.getCreatedDate());
-        message.setVoidReason("Voided");
+        message.setCancelDate(pendingEInvoiceQueue.getCreatedDate());
+        message.setCancelTime(pendingEInvoiceQueue.getCreatedDate());
+        message.setCancelReason("Cancelled");
 
         return message;
     }
