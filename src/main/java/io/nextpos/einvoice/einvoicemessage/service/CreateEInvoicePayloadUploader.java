@@ -12,7 +12,7 @@ import com.tradevan.gateway.einv.msg.v32.UtilBody.RoleDescriptionType;
 import com.tradevan.gateway.einv.msg.v32.UtilBody.TaxTypeEnum;
 import io.nextpos.einvoice.common.invoice.ElectronicInvoice;
 import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueue;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.format.number.NumberStyleFormatter;
 
 import java.text.NumberFormat;

@@ -4,7 +4,7 @@ import com.tradevan.gateway.einv.msg.EINVPayload;
 import com.tradevan.gateway.einv.msg.v32.C0501;
 import io.nextpos.einvoice.common.invoice.ElectronicInvoice;
 import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueue;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 class CancelEInvoicePayloadUploader extends EInvoicePayloadUploader {
 
