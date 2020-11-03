@@ -12,6 +12,7 @@ public class DummyObjects {
     public static ElectronicInvoice dummyElectronicInvoice(String invoiceNumber) {
         return new ElectronicInvoice(ObjectId.get().toString(),
                 invoiceNumber,
+                ElectronicInvoice.InvoiceStatus.CREATED,
                 new ElectronicInvoice.InvoicePeriod(ZoneId.of("Asia/Taipei")),
                 new BigDecimal("150"),
                 new BigDecimal("7.5"),

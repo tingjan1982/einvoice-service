@@ -7,8 +7,8 @@ import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueueService;
 import io.nextpos.einvoice.common.invoicenumber.InvoiceNumberRange;
 import io.nextpos.einvoice.common.invoicenumber.InvoiceNumberRangeService;
 import io.nextpos.einvoice.shared.config.TurnkeyConfigProperties;
+import io.nextpos.einvoice.util.DummyObjects;
 import org.apache.commons.io.FileUtils;
-import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,9 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
-import java.math.BigDecimal;
-import java.time.ZoneId;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -98,15 +95,7 @@ class EInvoiceMessageServiceImplTest {
 
     private ElectronicInvoice createMockElectronicInvoice() {
 
-        final ElectronicInvoice electronicInvoice = new ElectronicInvoice(ObjectId.get().toString(),
-                "AG-12345678",
-                new ElectronicInvoice.InvoicePeriod(ZoneId.of("Asia/Taipei")),
-                new BigDecimal("150"),
-                new BigDecimal("7.5"),
-                "83515813",
-                "Rain App",
-                List.of(new ElectronicInvoice.InvoiceItem("coffee", 1, new BigDecimal("150"), new BigDecimal("150"))));
-
+        final ElectronicInvoice electronicInvoice = DummyObjects.dummyElectronicInvoice("AG-12345678");
         return electronicInvoiceRepository.save(electronicInvoice);
     }
 
