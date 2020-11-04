@@ -38,16 +38,28 @@ class CreateEInvoicePayloadUploader extends EInvoicePayloadUploader {
 
         // invoice metadata
         mainType.setInvoiceType(InvoiceTypeEnum.SixGeneralTaxType); // 7 or 8
-        mainType.setDonateMark(DonateMarkEnum.NotDonated);
         mainType.setRandomNumber(electronicInvoice.getRandomNumber());
 
-        if (StringUtils.isNotBlank(electronicInvoice.getCarrierId())) {
-            mainType.setPrintMark("N");
-            mainType.setCarrierType("3J0002");
+        if (electronicInvoice.getCarrierType() != null) {
+            String carrierType = electronicInvoice.getCarrierType() == ElectronicInvoice.CarrierType.MOBILE ? "3J0002" : "CQ0001";
+            mainType.setCarrierType(carrierType);
             mainType.setCarrierId1(electronicInvoice.getCarrierId());
             mainType.setCarrierId2(electronicInvoice.getCarrierId2());
+
+            mainType.setPrintMark("N");
+
+            if (StringUtils.isNotBlank(electronicInvoice.getBuyerUbn())) {
+                mainType.setPrintMark(electronicInvoice.isPrintMark() ? "Y" : "N");
+            }
         } else {
             mainType.setPrintMark("Y");
+        }
+
+        if (StringUtils.isNotBlank(electronicInvoice.getNpoBan())) {
+            mainType.setNPOBAN(electronicInvoice.getNpoBan());
+            mainType.setDonateMark(DonateMarkEnum.Donated);
+        } else {
+            mainType.setDonateMark(DonateMarkEnum.NotDonated);
         }
 
         RoleDescriptionType seller = new RoleDescriptionType();
