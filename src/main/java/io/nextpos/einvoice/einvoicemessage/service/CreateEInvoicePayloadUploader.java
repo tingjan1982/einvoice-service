@@ -58,6 +58,7 @@ class CreateEInvoicePayloadUploader extends EInvoicePayloadUploader {
         if (StringUtils.isNotBlank(electronicInvoice.getNpoBan())) {
             mainType.setNPOBAN(electronicInvoice.getNpoBan());
             mainType.setDonateMark(DonateMarkEnum.Donated);
+            mainType.setPrintMark("N");
         } else {
             mainType.setDonateMark(DonateMarkEnum.NotDonated);
         }
