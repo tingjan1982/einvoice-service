@@ -66,6 +66,7 @@ class CreateEInvoicePayloadUploader extends EInvoicePayloadUploader {
         RoleDescriptionType seller = new RoleDescriptionType();
         seller.setIdentifier(electronicInvoice.getSellerUbn());
         seller.setName(electronicInvoice.getSellerName());
+        seller.setAddress(electronicInvoice.getSellerAddress());
         mainType.setSeller(seller);
         RoleDescriptionType buyer = new RoleDescriptionType();
 
@@ -103,12 +104,12 @@ class CreateEInvoicePayloadUploader extends EInvoicePayloadUploader {
         message.setDetails(details);
 
         AmountType amount = new AmountType();
-        amount.setSalesAmount(electronicInvoice.getSalesAmountWithoutTax().toString());
+        amount.setSalesAmount(electronicInvoice.getSalesAmount().toString());
         amount.setFreeTaxSalesAmount("0");
         amount.setZeroTaxSalesAmount("0");
         amount.setTaxType(TaxTypeEnum.Taxable);
         amount.setTaxRate("0.05");
-        amount.setTaxAmount(electronicInvoice.getTaxAmount().toString());
+        amount.setTaxAmount("0");
         amount.setTotalAmount(electronicInvoice.getSalesAmount().toString());
         message.setAmount(amount);
 
