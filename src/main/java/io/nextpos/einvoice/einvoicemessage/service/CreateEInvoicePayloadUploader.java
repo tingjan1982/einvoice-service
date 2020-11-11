@@ -104,12 +104,19 @@ class CreateEInvoicePayloadUploader extends EInvoicePayloadUploader {
         message.setDetails(details);
 
         AmountType amount = new AmountType();
-        amount.setSalesAmount(electronicInvoice.getSalesAmount().toString());
         amount.setFreeTaxSalesAmount("0");
         amount.setZeroTaxSalesAmount("0");
         amount.setTaxType(TaxTypeEnum.Taxable);
         amount.setTaxRate("0.05");
-        amount.setTaxAmount("0");
+
+        if (StringUtils.isNotBlank(electronicInvoice.getBuyerUbn())) {
+            amount.setSalesAmount(electronicInvoice.getSalesAmountWithoutTax().toString());
+            amount.setTaxAmount(electronicInvoice.getTaxAmount().toString());
+        } else {
+            amount.setSalesAmount(electronicInvoice.getSalesAmount().toString());
+            amount.setTaxAmount("0");
+        }
+
         amount.setTotalAmount(electronicInvoice.getSalesAmount().toString());
         message.setAmount(amount);
 
