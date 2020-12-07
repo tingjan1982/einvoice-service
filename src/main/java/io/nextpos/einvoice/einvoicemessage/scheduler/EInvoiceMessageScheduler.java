@@ -69,7 +69,7 @@ public class EInvoiceMessageScheduler {
     /**
      * Runs at 5am everyday.
      */
-    @Scheduled(cron = "0 0 5 ? * *")
+    //@Scheduled(cron = "0 0 5 ? * *")
     public void deleteProcessedQueues() {
         eInvoiceMessageProcessor.deleteProcessedQueues();
     }

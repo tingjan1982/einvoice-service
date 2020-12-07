@@ -20,6 +20,7 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -177,7 +178,7 @@ class EInvoiceMessageProcessorImplTest {
         final PendingEInvoiceQueue pendingEInvoiceQueue = pendingEInvoiceQueueRepository.findAll().get(0);
         eInvoiceMessageProcessor.processEInvoiceMessages(() -> List.of(pendingEInvoiceQueue));
 
-        final List<PendingInvoiceStats> stats = pendingEInvoiceQueueService.generatePendingEInvoiceStats();
+        final Map<String, List<PendingInvoiceStats>> stats = pendingEInvoiceQueueService.generatePendingEInvoiceStats();
         LOGGER.info("{}", stats);
 
         assertThat(stats).hasSize(2);

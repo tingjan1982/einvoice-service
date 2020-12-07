@@ -1,10 +1,12 @@
 package io.nextpos.einvoice.einvoicemessage.web;
 
 import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueueService;
-import io.nextpos.einvoice.common.invoice.PendingInvoiceStats;
 import io.nextpos.einvoice.common.invoicenumber.InvoiceNumberRange;
 import io.nextpos.einvoice.common.invoicenumber.InvoiceNumberRangeService;
 import io.nextpos.einvoice.einvoicemessage.service.EInvoiceMessageProcessor;
+import io.nextpos.einvoice.einvoicemessage.web.model.EInvoiceCheckReportsResponse;
+import io.nextpos.einvoice.report.data.EInvoiceCheckReport;
+import io.nextpos.einvoice.report.service.EInvoiceCheckReportService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,16 +29,21 @@ public class EInvoiceMessageController {
 
     private final InvoiceNumberRangeService invoiceNumberRangeService;
 
+    private final EInvoiceCheckReportService eInvoiceCheckReportService;
+
     @Autowired
-    public EInvoiceMessageController(EInvoiceMessageProcessor eInvoiceMessageProcessor, PendingEInvoiceQueueService pendingEInvoiceQueueService, InvoiceNumberRangeService invoiceNumberRangeService) {
+    public EInvoiceMessageController(EInvoiceMessageProcessor eInvoiceMessageProcessor, PendingEInvoiceQueueService pendingEInvoiceQueueService, InvoiceNumberRangeService invoiceNumberRangeService, EInvoiceCheckReportService eInvoiceCheckReportService) {
         this.eInvoiceMessageProcessor = eInvoiceMessageProcessor;
         this.pendingEInvoiceQueueService = pendingEInvoiceQueueService;
         this.invoiceNumberRangeService = invoiceNumberRangeService;
+        this.eInvoiceCheckReportService = eInvoiceCheckReportService;
     }
 
-    @GetMapping("/stats")
-    public List<PendingInvoiceStats> stats() {
-        return pendingEInvoiceQueueService.generatePendingEInvoiceStats();
+    @GetMapping("/checkReport")
+    public EInvoiceCheckReportsResponse generateCheckReport() {
+        final List<EInvoiceCheckReport> eInvoiceCheckReports = eInvoiceCheckReportService.generateEInvoiceCheckReport();
+
+        return new EInvoiceCheckReportsResponse(eInvoiceCheckReports);
     }
 
     @PostMapping("/process")
