@@ -19,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/einvoice")
+@CrossOrigin
 public class EInvoiceMessageController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EInvoiceMessageController.class);
