@@ -22,10 +22,24 @@ public class EInvoiceMessageScheduler {
 
     private final SchedulerConfigProperties schedulerConfigProperties;
 
+    private volatile boolean paused;
+
     @Autowired
     public EInvoiceMessageScheduler(EInvoiceMessageProcessor eInvoiceMessageProcessor, SchedulerConfigProperties schedulerConfigProperties) {
         this.eInvoiceMessageProcessor = eInvoiceMessageProcessor;
         this.schedulerConfigProperties = schedulerConfigProperties;
+    }
+
+    public synchronized void pause() {
+        paused = true;
+
+        LOGGER.info("Scheduler is paused, paused={}", paused);
+    }
+
+    public synchronized void resume() {
+        paused = false;
+
+        LOGGER.info("Scheduler is resumed, paused={}", paused);
     }
 
     /**
@@ -42,12 +56,14 @@ public class EInvoiceMessageScheduler {
 
     @Scheduled(fixedRateString = "#{schedulerConfigProperties.processMessageInterval.toMillis()}")
     public void processEInvoiceMessages() {
-        eInvoiceMessageProcessor.processEInvoiceMessages();
+
+        this.determineAndRun(eInvoiceMessageProcessor::processEInvoiceMessages);
     }
 
     @Scheduled(initialDelay = 20000, fixedRateString = "#{schedulerConfigProperties.updateInvoiceStatusInterval.toMillis()}")
     public void updateEInvoiceStatus() {
-        eInvoiceMessageProcessor.updateEInvoicesStatus();
+
+        this.determineAndRun(eInvoiceMessageProcessor::updateEInvoicesStatus);
     }
 
     /**
@@ -55,7 +71,8 @@ public class EInvoiceMessageScheduler {
      */
     @Scheduled(cron = "0 0 0 3 * ?")
     public void processUnusedInvoiceNumber() {
-        eInvoiceMessageProcessor.processUnusedInvoiceNumbers();
+
+        this.determineAndRun(eInvoiceMessageProcessor::processUnusedInvoiceNumbers);
     }
 
     /**
@@ -63,7 +80,17 @@ public class EInvoiceMessageScheduler {
      */
     @Scheduled(cron = "0 0 * 3,4,5,6,7,8,9,10 * ?")
     public void updateInvoiceNumbersStatus() {
-        eInvoiceMessageProcessor.updateInvoiceNumbersStatus();
+
+        this.determineAndRun(eInvoiceMessageProcessor::updateInvoiceNumbersStatus);
+    }
+
+    private void determineAndRun(Runnable function) {
+
+        if (paused) {
+            LOGGER.info("Scheduler is paused.");
+        } else {
+            function.run();
+        }
     }
 
     /**

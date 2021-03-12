@@ -181,6 +181,6 @@ class EInvoiceMessageProcessorImplTest {
         final Map<String, List<PendingInvoiceStats>> stats = pendingEInvoiceQueueService.generatePendingEInvoiceStats();
         LOGGER.info("{}", stats);
 
-        assertThat(stats).hasSize(2);
+        assertThat(stats.get("83515813")).hasSize(2);
     }
 }

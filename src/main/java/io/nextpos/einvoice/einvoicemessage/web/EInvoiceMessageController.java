@@ -3,6 +3,7 @@ package io.nextpos.einvoice.einvoicemessage.web;
 import io.nextpos.einvoice.common.invoice.PendingEInvoiceQueueService;
 import io.nextpos.einvoice.common.invoicenumber.InvoiceNumberRange;
 import io.nextpos.einvoice.common.invoicenumber.InvoiceNumberRangeService;
+import io.nextpos.einvoice.einvoicemessage.scheduler.EInvoiceMessageScheduler;
 import io.nextpos.einvoice.einvoicemessage.service.EInvoiceMessageProcessor;
 import io.nextpos.einvoice.einvoicemessage.web.model.EInvoiceCheckReportsResponse;
 import io.nextpos.einvoice.report.data.EInvoiceCheckReport;
@@ -26,6 +27,8 @@ public class EInvoiceMessageController {
 
     private final EInvoiceMessageProcessor eInvoiceMessageProcessor;
 
+    private final EInvoiceMessageScheduler eInvoiceMessageScheduler;
+
     private final PendingEInvoiceQueueService pendingEInvoiceQueueService;
 
     private final InvoiceNumberRangeService invoiceNumberRangeService;
@@ -33,8 +36,9 @@ public class EInvoiceMessageController {
     private final EInvoiceCheckReportService eInvoiceCheckReportService;
 
     @Autowired
-    public EInvoiceMessageController(EInvoiceMessageProcessor eInvoiceMessageProcessor, PendingEInvoiceQueueService pendingEInvoiceQueueService, InvoiceNumberRangeService invoiceNumberRangeService, EInvoiceCheckReportService eInvoiceCheckReportService) {
+    public EInvoiceMessageController(EInvoiceMessageProcessor eInvoiceMessageProcessor, EInvoiceMessageScheduler eInvoiceMessageScheduler, PendingEInvoiceQueueService pendingEInvoiceQueueService, InvoiceNumberRangeService invoiceNumberRangeService, EInvoiceCheckReportService eInvoiceCheckReportService) {
         this.eInvoiceMessageProcessor = eInvoiceMessageProcessor;
+        this.eInvoiceMessageScheduler = eInvoiceMessageScheduler;
         this.pendingEInvoiceQueueService = pendingEInvoiceQueueService;
         this.invoiceNumberRangeService = invoiceNumberRangeService;
         this.eInvoiceCheckReportService = eInvoiceCheckReportService;
@@ -63,5 +67,15 @@ public class EInvoiceMessageController {
 
         final InvoiceNumberRange invoiceNumberRange = invoiceNumberRangeService.getInvoiceNumberRangeByRangeIdentifier(request.getUbn(), request.getRangeIdentifier());
         eInvoiceMessageProcessor.processUnusedInvoiceNumber(invoiceNumberRange, request.getRangeFrom(), request.getRangeTo());
+    }
+
+    @PostMapping("/pause")
+    public void pauseScheduler() {
+        eInvoiceMessageScheduler.pause();
+    }
+
+    @PostMapping("/resume")
+    public void resumeScheduler() {
+        eInvoiceMessageScheduler.resume();
     }
 }
