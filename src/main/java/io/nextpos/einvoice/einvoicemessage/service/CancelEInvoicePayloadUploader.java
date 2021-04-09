@@ -18,7 +18,7 @@ class CancelEInvoicePayloadUploader extends EInvoicePayloadUploader {
         final C0501 message = new C0501();
         message.setCancelInvoiceNumber(electronicInvoice.getInternalInvoiceNumber());
         message.setInvoiceDate(electronicInvoice.getInvoiceCreatedDate());
-        message.setBuyerId(StringUtils.defaultString(electronicInvoice.getBuyerUbn(), "0000000000"));
+        message.setBuyerId(StringUtils.defaultIfBlank(electronicInvoice.getBuyerUbn(), "0000000000"));
         message.setSellerId(electronicInvoice.getSellerUbn());
         message.setCancelDate(pendingEInvoiceQueue.getCreatedDate());
         message.setCancelTime(pendingEInvoiceQueue.getCreatedDate());

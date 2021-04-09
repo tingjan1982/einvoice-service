@@ -18,7 +18,7 @@ public class VoidEInvoicePayloadUploader extends EInvoicePayloadUploader {
         final C0701 message = new C0701();
         message.setVoidInvoiceNumber(electronicInvoice.getInternalInvoiceNumber());
         message.setInvoiceDate(electronicInvoice.getInvoiceCreatedDate());
-        message.setBuyerId(StringUtils.defaultString(electronicInvoice.getBuyerUbn(), "0000000000"));
+        message.setBuyerId(StringUtils.defaultIfBlank(electronicInvoice.getBuyerUbn(), "0000000000"));
         message.setSellerId(electronicInvoice.getSellerUbn());
         message.setVoidDate(pendingEInvoiceQueue.getCreatedDate());
         message.setVoidTime(pendingEInvoiceQueue.getCreatedDate());
