@@ -55,7 +55,6 @@ jobs:
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
       - run: ./gradlew clean build -x test -PciBuild
-      - run: ./gradlew bootBuildImage -PciBuild
       - run: mkdir -p source/libs ; cp build/libs/*.jar source/libs
       - persist_to_workspace:
           root: source
@@ -67,6 +66,10 @@ jobs:
     steps:
       - attach_workspace:
           at: source
+      - run:
+          name: build docker image
+          command: |
+            ./gradlew bootBuildImage -PciBuild
       - run:
           name: docker login
           command: |
