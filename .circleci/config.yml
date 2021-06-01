@@ -36,6 +36,10 @@ jobs:
       TERM: dumb
 
     steps:
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
+
       - checkout
       # required by persist_to_space step
       - run: yum install -y tar
@@ -55,9 +59,6 @@ jobs:
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
       - run: ./gradlew clean build -x test -PciBuild
-      - setup_remote_docker:
-          version: 19.03.13
-          docker_layer_caching: true
       - run: ./gradlew bootBuildImage -PciBuild
       - run: docker push joelin/einvoice-service:latest
 
