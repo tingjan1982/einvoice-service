@@ -43,8 +43,8 @@ jobs:
 
       - checkout
       # required by persist_to_space step
-      - run: yum install -y tar
-      - run: yum install -y gzip
+#      - run: yum install -y tar
+#      - run: yum install -y gzip
       # Download and cache dependencies
       - restore_cache:
           keys:
