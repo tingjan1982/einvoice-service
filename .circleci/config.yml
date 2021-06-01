@@ -2,6 +2,7 @@
 # Configuration reference: https://circleci.com/docs/2.0/configuration-reference/
 # Java config: https://circleci.com/docs/2.0/language-java/
 # GCP howto: https://localghost.dev/2019/12/deploying-your-google-appengine-app-with-circleci/
+# Remote docker: https://circleci.com/docs/2.0/building-docker-images/
 #
 version: 2.1
 
@@ -12,10 +13,6 @@ workflows:
           context:
             - "GitHub Release Credentials"
             - "Docker"
-#      - docker:
-#          requires:
-#            - build
-
 
 jobs:
   build:
@@ -42,9 +39,6 @@ jobs:
           version: 19.03.13
 
       - checkout
-      # required by persist_to_space step
-#      - run: yum install -y tar
-#      - run: yum install -y gzip
       # Download and cache dependencies
       - restore_cache:
           keys:
@@ -68,19 +62,9 @@ jobs:
           command: |
             ./gradlew bootBuildImage -PciBuild
       - run:
-          name: docker login
-          command: |
-            echo $DOCKER_PASSWORD | docker login -u "$DOCKER_USERNAME" --password-stdin
-      - run:
           name: docker push
           command: |
             docker push joelin/einvoice-service:latest
-
-#      - run: mkdir -p source ; cp -r . source
-#      - persist_to_workspace:
-#          root: source
-#          paths:
-#            - source
 
 #  docker:
 #    machine: true
