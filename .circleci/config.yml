@@ -55,26 +55,32 @@ jobs:
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
       - run: ./gradlew clean build -x test -PciBuild
-      - run: mkdir -p source ; cp -r . source
-      - persist_to_workspace:
-          root: source
-          paths:
-            - source
+      - setup_remote_docker:
+        version: 19.03.13
+        docker_layer_caching: true
+      - run: ./gradlew bootBuildImage -PciBuild
+      - run: docker push joelin/einvoice-service:latest
 
-  docker:
-    machine: true
-    steps:
-      - attach_workspace:
-          at: source
-      - run:
-          name: build docker image
-          command: |
-            ./gradlew bootBuildImage -PciBuild
-      - run:
-          name: docker login
-          command: |
-            echo $DOCKER_PASSWORD | docker login -u "$DOCKER_USERNAME" --password-stdin
-      - run:
-          name: push docker image
-          command: |
-            docker push joelin/einvoice-service:latest
+#      - run: mkdir -p source ; cp -r . source
+#      - persist_to_workspace:
+#          root: source
+#          paths:
+#            - source
+
+#  docker:
+#    machine: true
+#    steps:
+#      - attach_workspace:
+#          at: .
+#      - run:
+#          name: build docker image
+#          command: |
+#            ./gradlew bootBuildImage -PciBuild
+#      - run:
+#          name: docker login
+#          command: |
+#            echo $DOCKER_PASSWORD | docker login -u "$DOCKER_USERNAME" --password-stdin
+#      - run:
+#          name: push docker image
+#          command: |
+#            docker push joelin/einvoice-service:latest
