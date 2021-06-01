@@ -40,7 +40,6 @@ jobs:
     steps:
       - setup_remote_docker:
           version: 19.03.13
-          docker_layer_caching: true
 
       - checkout
       # required by persist_to_space step
