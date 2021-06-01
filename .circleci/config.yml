@@ -9,11 +9,12 @@ workflows:
   build-and-deploy:
     jobs:
       - build:
-          context: "GitHub Release Credentials"
-      - docker:
-          requires:
-            - build
-          context: "Docker"
+          - context: "GitHub Release Credentials"
+          - context: "Docker"
+#      - docker:
+#          requires:
+#            - build
+
 
 jobs:
   build:
