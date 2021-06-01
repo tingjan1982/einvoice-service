@@ -1,0 +1,77 @@
+#
+# Configuration reference: https://circleci.com/docs/2.0/configuration-reference/
+# Java config: https://circleci.com/docs/2.0/language-java/
+# GCP howto: https://localghost.dev/2019/12/deploying-your-google-appengine-app-with-circleci/
+#
+version: 2.1
+
+workflows:
+  build-and-deploy:
+    jobs:
+      - build:
+          context: "GitHub Release Credentials"
+      - docker:
+          requires:
+            - build
+          context: "Docker"
+
+jobs:
+  build:
+    docker:
+      - image: amazoncorretto:11
+        auth:
+          username: $DOCKER_USERNAME
+          password: $DOCKER_PASSWORD
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: ~/repo
+
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+
+    steps:
+      - checkout
+      # required by persist_to_space step
+      - run: yum install -y tar
+      - run: yum install -y gzip
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: ./gradlew dependencies
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle" }}
+
+      - run: ./gradlew clean build -x test -PciBuild
+      - run: ./gradlew bootBuildImage -PciBuild
+      - run: mkdir -p source/libs ; cp build/libs/*.jar source/libs
+      - persist_to_workspace:
+          root: source
+          paths:
+            - libs
+
+  docker:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: source
+      - run:
+          name: docker login
+          command: |
+            echo $DOCKER_PASSWORD | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - run:
+          name: push docker image
+          command: |
+            docker push joelin/einvoice-service:latest
