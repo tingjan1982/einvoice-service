@@ -55,11 +55,11 @@ jobs:
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
       - run: ./gradlew clean build -x test -PciBuild
-      - run: mkdir -p source ; cp -r ./ source
+      - run: mkdir -p source ; cp -r . source
       - persist_to_workspace:
           root: source
           paths:
-            - ./
+            - source
 
   docker:
     machine: true
