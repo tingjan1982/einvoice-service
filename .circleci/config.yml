@@ -62,6 +62,10 @@ jobs:
           command: |
             ./gradlew bootBuildImage -PciBuild
       - run:
+          name: docker login
+          command: |
+            echo $DOCKER_PASSWORD | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - run:
           name: docker push
           command: |
             docker push joelin/einvoice-service:latest
