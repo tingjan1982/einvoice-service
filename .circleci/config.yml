@@ -40,6 +40,9 @@ jobs:
     steps:
       - setup_remote_docker:
           version: 19.03.13
+      - run:
+          name: Install Docker client
+          command: apk add docker-cli
 
       - checkout
       # required by persist_to_space step
@@ -61,7 +64,9 @@ jobs:
 
       - run: ./gradlew clean build -x test -PciBuild
       - run: ./gradlew bootBuildImage -PciBuild
-      - run: docker push joelin/einvoice-service:latest
+      - run: |
+          echo $DOCKER_PASSWORD | docker login -u "$DOCKER_USERNAME" --password-stdin
+          docker push joelin/einvoice-service:latest
 
 #      - run: mkdir -p source ; cp -r . source
 #      - persist_to_workspace:
