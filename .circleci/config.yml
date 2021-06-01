@@ -46,11 +46,11 @@ jobs:
 #      - run: yum install -y tar
 #      - run: yum install -y gzip
       # Download and cache dependencies
-#      - restore_cache:
-#          keys:
-#            - v1-dependencies-{{ checksum "build.gradle" }}
-#            # fallback to using the latest cache if no exact match is found
-#            - v1-dependencies-
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
 
       - run: ./gradlew dependencies
 
@@ -59,11 +59,22 @@ jobs:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
-      - run: ./gradlew clean build -x test -PciBuild
-      - run: ./gradlew bootBuildImage -PciBuild
-      - run: |
-          echo $DOCKER_PASSWORD | docker login -u "$DOCKER_USERNAME" --password-stdin
-          docker push joelin/einvoice-service:latest
+      - run:
+          name: build
+          command: |
+            ./gradlew clean build -x test -PciBuild
+      - run:
+          name: docker build
+          command: |
+            ./gradlew bootBuildImage -PciBuild
+      - run:
+          name: docker login
+          command: |
+            echo $DOCKER_PASSWORD | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - run:
+          name: docker push
+          command: |
+            docker push joelin/einvoice-service:latest
 
 #      - run: mkdir -p source ; cp -r . source
 #      - persist_to_workspace:
