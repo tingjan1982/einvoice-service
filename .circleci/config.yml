@@ -42,7 +42,7 @@ jobs:
           version: 19.03.13
       - run:
           name: Install Docker client
-          command: apk add docker-cli
+          command: yum install docker-cli
 
       - checkout
       # required by persist_to_space step
