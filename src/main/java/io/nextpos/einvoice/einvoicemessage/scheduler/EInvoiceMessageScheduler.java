@@ -69,7 +69,7 @@ public class EInvoiceMessageScheduler {
     /**
      * Runs on the 3rd of every month
      */
-    @Scheduled(cron = "0 0 0 3 * ?")
+    @Scheduled(cron = "0 0 0 3-9 * ?")
     public void processUnusedInvoiceNumber() {
 
         this.determineAndRun(eInvoiceMessageProcessor::processUnusedInvoiceNumbers);
